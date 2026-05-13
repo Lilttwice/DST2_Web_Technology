@@ -17,26 +17,43 @@ public class AppConfig {
     }
 
     public AppConfig() {
-        InputStream resourceAsStream = null;
-        try {
-            resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("app.properties");
-            Properties properties = new Properties();
-            try {
-                properties.load(resourceAsStream);
-                this.jdbcUrl = properties.getProperty("jdbc.url");
-                this.jdbcUsername = properties.getProperty("jdbc.username");
-                this.jdbcPassword = properties.getProperty("jdbc.password");
-            } catch (IOException e) {
-                log.info("", e);
+        Properties properties = loadMergedProperties();
+        this.jdbcUrl = properties.getProperty("jdbc.url");
+        this.jdbcUsername = properties.getProperty("jdbc.username");
+        this.jdbcPassword = properties.getProperty("jdbc.password");
+    }
+
+    private static Properties loadMergedProperties() {
+        Properties properties = new Properties();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        loadResource(loader, properties, "app.properties");
+        loadResource(loader, properties, "app.local.properties");
+        overrideFromEnv(properties);
+        return properties;
+    }
+
+    private static void loadResource(ClassLoader loader, Properties properties, String name) {
+        try (InputStream in = loader.getResourceAsStream(name)) {
+            if (in != null) {
+                properties.load(in);
             }
-        } finally {
-            if (resourceAsStream != null) {
-                try {
-                    resourceAsStream.close();
-                } catch (IOException e) {
-                    log.info("", e);
-                }
-            }
+        } catch (IOException e) {
+            log.warn("Failed to load {}", name, e);
+        }
+    }
+
+    private static void overrideFromEnv(Properties properties) {
+        String url = System.getenv("JDBC_URL");
+        if (url != null && !url.isBlank()) {
+            properties.setProperty("jdbc.url", url);
+        }
+        String user = System.getenv("JDBC_USERNAME");
+        if (user != null && !user.isBlank()) {
+            properties.setProperty("jdbc.username", user);
+        }
+        String password = System.getenv("JDBC_PASSWORD");
+        if (password != null && !password.isBlank()) {
+            properties.setProperty("jdbc.password", password);
         }
     }
 

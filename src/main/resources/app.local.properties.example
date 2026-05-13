@@ -1,0 +1,3 @@
+# Copy to app.local.properties (same folder) and set your real password.
+# app.local.properties is gitignored and overrides app.properties.
+jdbc.password=your-mysql-password-here

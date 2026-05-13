@@ -4,3 +4,8 @@ target
 .project
 .classpath
 .vscode
+.idea/
+*.iml
+.DS_Store
+.envrc
+src/main/resources/app.local.properties
