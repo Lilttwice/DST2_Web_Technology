@@ -43,6 +43,19 @@
                     Dosing Guideline
                 </a>
             </li>
+            <li class="nav-item">
+                <a class='nav-link ${param.active == "module2" ? "active" : ""}' href="<%=request.getContextPath()%>/module2/search">
+                    <span data-feather="search"></span>
+                    Drug–Gene Search
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class='nav-link ${param.active == "risk_preview" ? "active" : ""}'
+                   href="<%=request.getContextPath()%>/module3/preview">
+                    <span data-feather="activity"></span>
+                    Risk assessment preview
+                </a>
+            </li>
         </ul>
     </div>
 </nav>

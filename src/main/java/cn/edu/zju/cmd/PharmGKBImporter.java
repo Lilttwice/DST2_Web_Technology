@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,22 +41,50 @@ public class PharmGKBImporter {
 
         drugLabelsContent.forEach(content -> {
             Map guideline = gson.fromJson(content, Map.class);
-            Map data = ((Map) guideline.get("data"));
-            String id = (String) data.get("id");
-            String objCls = (String) data.get("objCls");
-            String name = (String) data.get("name");
-            boolean recommendation = (Boolean) data.get("recommendation");
-            String drugId = ((String) ((List<Map>) data.get("relatedChemicals")).get(0).get("id"));
-            String source = (String) data.get("source");
-            String summaryMarkdown = ((String) ((Map) data.get("summaryMarkdown")).get("html"));
-            String textMarkdown = ((String) ((Map) data.get("textMarkdown")).get("html"));
-            String raw = gson.toJson(guideline);
-            DosingGuideline dosingGuideline = new DosingGuideline(id, objCls, name, recommendation, drugId, source, summaryMarkdown, textMarkdown, raw);
-            if (!dosingGuidelineDao.existsById(id)) {
-                dosingGuidelineDao.saveDosingGuideline(dosingGuideline);
-                log.info("Saving dosing guideline: {}", id);
-            } else {
-                log.info("Dosing guideline exists, skipping: {}", id);
+            Object dataNode = guideline.get("data");
+            List<Map> items = new ArrayList<>();
+            if (dataNode instanceof List) {
+                for (Object o : (List<?>) dataNode) {
+                    if (o instanceof Map) {
+                        items.add((Map) o);
+                    }
+                }
+            } else if (dataNode instanceof Map) {
+                items.add((Map) dataNode);
+            }
+            for (Map data : items) {
+                try {
+                    String id = (String) data.get("id");
+                    String objCls = (String) data.get("objCls");
+                    String name = (String) data.get("name");
+                    Boolean rec = (Boolean) data.get("recommendation");
+                    boolean recommendation = rec != null && rec;
+                    List<Map> related = (List<Map>) data.get("relatedChemicals");
+                    if (related == null || related.isEmpty()) {
+                        log.warn("Skip dosing guideline without relatedChemicals: {}", id);
+                        continue;
+                    }
+                    String drugId = (String) related.get(0).get("id");
+                    String source = (String) data.get("source");
+                    String summaryMarkdown = "";
+                    if (data.get("summaryMarkdown") instanceof Map) {
+                        summaryMarkdown = (String) ((Map) data.get("summaryMarkdown")).get("html");
+                    }
+                    String textMarkdown = "";
+                    if (data.get("textMarkdown") instanceof Map) {
+                        textMarkdown = (String) ((Map) data.get("textMarkdown")).get("html");
+                    }
+                    String raw = gson.toJson(data);
+                    DosingGuideline dosingGuideline = new DosingGuideline(id, objCls, name, recommendation, drugId, source, summaryMarkdown, textMarkdown, raw);
+                    if (!dosingGuidelineDao.existsById(id)) {
+                        dosingGuidelineDao.saveDosingGuideline(dosingGuideline);
+                        log.info("Saving dosing guideline: {}", id);
+                    } else {
+                        log.info("Dosing guideline exists, skipping: {}", id);
+                    }
+                } catch (Exception e) {
+                    log.warn("Skip malformed dosing guideline row", e);
+                }
             }
         });
     }
@@ -73,16 +102,63 @@ public class PharmGKBImporter {
 
         drugList.stream().forEach(x -> {
             log.info("{}", x);
-            Map drug = ((Map) x.get("drug"));
+            Map drug = resolveDrugMapFromListRow(x);
+            if (drug == null) {
+                log.warn("Skip drug row without nested drug or relatedChemicals: {}", x.get("id"));
+                return;
+            }
             String id = (String) drug.get("id");
+            if (id == null) {
+                log.warn("Skip drug row with null id");
+                return;
+            }
             String name = (String) drug.get("name");
             String objCls = (String) drug.get("objCls");
             String drugUrl = (String) x.get("drugUrl");
-            boolean biomarker = ((Boolean) x.get("biomarker"));
+            boolean biomarker = resolveBiomarkerFlag(x);
             Drug drugBean = new Drug(id, name, biomarker, drugUrl, objCls);
 
-            drugDao.saveDrug(drugBean);
+            if (!drugDao.existsById(id)) {
+                drugDao.saveDrug(drugBean);
+                log.info("Saving drug: {}", id);
+            } else {
+                log.info("Drug exists, skipping: {}", id);
+            }
         });
+    }
+
+    /**
+     * Step-1 crawler writes FDA label list to drugs.data. Older API samples nested "drug";
+     * current list entries expose chemicals under "relatedChemicals".
+     */
+    @SuppressWarnings("unchecked")
+    private static Map resolveDrugMapFromListRow(Map x) {
+        Object drugNode = x.get("drug");
+        if (drugNode instanceof Map) {
+            return (Map) drugNode;
+        }
+        Object rel = x.get("relatedChemicals");
+        if (rel instanceof List) {
+            for (Object o : (List<?>) rel) {
+                if (o instanceof Map) {
+                    return (Map) o;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean resolveBiomarkerFlag(Map x) {
+        Boolean bm = (Boolean) x.get("biomarker");
+        if (bm != null) {
+            return bm;
+        }
+        Object status = x.get("biomarkerStatus");
+        if (status instanceof String) {
+            String s = ((String) status).toLowerCase();
+            return s.contains("biomarker") && !s.contains("formerly");
+        }
+        return false;
     }
 
     private void importDrugLabel() {

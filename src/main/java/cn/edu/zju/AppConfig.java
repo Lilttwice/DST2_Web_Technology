@@ -44,15 +44,15 @@ public class AppConfig {
 
     private static void overrideFromEnv(Properties properties) {
         String url = System.getenv("JDBC_URL");
-        if (url != null && !url.isBlank()) {
+        if (url != null && !url.trim().isEmpty()) {
             properties.setProperty("jdbc.url", url);
         }
         String user = System.getenv("JDBC_USERNAME");
-        if (user != null && !user.isBlank()) {
+        if (user != null && !user.trim().isEmpty()) {
             properties.setProperty("jdbc.username", user);
         }
         String password = System.getenv("JDBC_PASSWORD");
-        if (password != null && !password.isBlank()) {
+        if (password != null && !password.trim().isEmpty()) {
             properties.setProperty("jdbc.password", password);
         }
     }

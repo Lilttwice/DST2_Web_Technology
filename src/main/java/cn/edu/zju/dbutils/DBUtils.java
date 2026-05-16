@@ -35,6 +35,10 @@ public class DBUtils {
         Connection connection = null;
         try {
             connection = getConnection();
+            if (connection == null) {
+                throw new IllegalStateException(
+                        "No JDBC connection. Check MySQL is running, credentials, and jdbc.url (for MySQL 8 add allowPublicKeyRetrieval=true).");
+            }
             consumer.accept(connection);
         } finally {
             if (connection != null) {
