@@ -1,4 +1,4 @@
-Technological Stack 
+DST2 - Technological Stack 
 
 • Java – The programing language 
 
@@ -47,7 +47,7 @@ Technological Stack
 
 1. Ensure that the provided system works (in the cloned repository).
 2. Setup group project repository. Use the provided Week 21 codes as initial commit. Ensure that the initial commit of your group project repository works.
-3. Develop a visitor counter web application in a new branch. Every time you visit the page, the number displayed will be increased by one. 
+3. Develop a visitor counter web application in a new branch. Every time you visit the page, the number displayed will be increased by one.
 
 • [https://tomcat.apache.org/tomcat-5.5-](https://tomcat.apache.org/tomcat-5.5-)doc/servletapi/javax/servlet/http/package-summary.html
 
