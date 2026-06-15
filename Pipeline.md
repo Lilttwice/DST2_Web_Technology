@@ -1,7 +1,5 @@
 Technological Stack 
 
-
-
 • Java – The programing language 
 
 • SQL – The data operation language 
@@ -48,17 +46,8 @@ Technological Stack
 3.3 Tasks
 
 1. Ensure that the provided system works (in the cloned repository).
-2. Setup group project repository. Use the provided Week 21 codes as initial
-
-commit. Ensure that the initial commit of your group project repository works.
-
-1. Develop a visitor counter web application in a new branch. Every time you
-
-visit the page, the number displayed will be increased by one. Group members
-
-review each other’s codes and make comments/modifications.
-
-3.4 References
+2. Setup group project repository. Use the provided Week 21 codes as initial commit. Ensure that the initial commit of your group project repository works.
+3. Develop a visitor counter web application in a new branch. Every time you visit the page, the number displayed will be increased by one. 
 
 • [https://tomcat.apache.org/tomcat-5.5-](https://tomcat.apache.org/tomcat-5.5-)doc/servletapi/javax/servlet/http/package-summary.html
 
@@ -74,7 +63,9 @@ Play with Week 17 codes
 
 7.3 Tasks 
 
-Track data flow in the example system using break points. Log program execution trace using SLF4J
+Track data flow in the example system using break points. 
+
+Log program execution trace using SLF4J
 
 9.3Tasks 
 
